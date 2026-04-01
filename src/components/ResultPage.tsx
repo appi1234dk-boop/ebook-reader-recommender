@@ -4,7 +4,6 @@ import { useState, useCallback } from 'react'
 import { track } from '@/lib/analytics'
 import type { RecommendationResult } from '@/lib/types'
 
-const NOTION_URL = process.env.NEXT_PUBLIC_NOTION_URL ?? 'https://husky-dormouse-1ec.notion.site/2026-2abc374e4c9280eab86fce6f0b947e2f'
 
 interface ResultPageProps {
   result: RecommendationResult
@@ -13,7 +12,7 @@ interface ResultPageProps {
 
 export function ResultPage({ result, onRestart }: ResultPageProps) {
   const [shareState, setShareState] = useState<'idle' | 'copied'>('idle')
-  const [notionVisible, setNotionVisible] = useState(false)
+  const [secretVisible, setSecretVisible] = useState(false)
   const [flippedCards, setFlippedCards] = useState<Set<string>>(new Set())
 
   const toggleCard = useCallback((id: string) => {
@@ -58,7 +57,7 @@ export function ResultPage({ result, onRestart }: ResultPageProps) {
         if (ok) {
           setShareState('copied')
           setTimeout(() => setShareState('idle'), 2500)
-          setNotionVisible(true)
+          setSecretVisible(true)
           track('share_complete', { method: 'execCommand' })
         }
       }
@@ -67,7 +66,7 @@ export function ResultPage({ result, onRestart }: ResultPageProps) {
         navigator.clipboard.writeText(shareUrl).then(() => {
           setShareState('copied')
           setTimeout(() => setShareState('idle'), 2500)
-          setNotionVisible(true)
+          setSecretVisible(true)
           track('share_complete', { method: 'clipboard' })
         }).catch(execCopy)
       } else {
@@ -78,7 +77,7 @@ export function ResultPage({ result, onRestart }: ResultPageProps) {
     if (typeof navigator !== 'undefined' && navigator.share) {
       navigator.share(shareData).then(() => {
         track('share_complete', { method: 'native' })
-        setNotionVisible(true)
+        setSecretVisible(true)
       }).catch((err: unknown) => {
         if (err instanceof Error && err.name === 'AbortError') return
         copyFallback()
@@ -109,7 +108,7 @@ export function ResultPage({ result, onRestart }: ResultPageProps) {
             className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold mb-4 tabular-nums"
             style={badgeStyle}
           >
-            구매 성공 확률 {result.probability}%
+            인생템일 확률 {result.probability}%
           </span>
           <h2 className="text-2xl font-black leading-snug mb-4 whitespace-pre-line" style={{ color: '#1C1B18' }}>
             {result.resultType}
@@ -228,32 +227,80 @@ export function ResultPage({ result, onRestart }: ResultPageProps) {
           })}
         </div>
 
-        {/* 공유 버튼 */}
-        <button
-          onClick={handleShare}
-          className="w-full py-4 text-white font-bold text-base rounded-2xl transition-all duration-150 active:scale-[0.98] mb-3"
-          style={{ background: '#1C1B18' }}
-        >
-          {shareState === 'copied' ? '링크가 복사됐어요! ✓' : '친구에게 공유하고 더 많이 추천받기 →'}
-        </button>
-
-        {/* 노션 링크 */}
-        {notionVisible && (
-          <a
-            href={NOTION_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={handleNotionClick}
-            className="block w-full py-4 text-center font-semibold text-base rounded-2xl transition-all duration-150 mb-3 border"
-            style={{
-              background: '#FFFFFF',
-              borderColor: '#DDDCD8',
-              color: '#1C1B18',
-              animation: 'fade-slide-in 0.35s ease both',
-            }}
+        {/* 말풍선 + 공유 버튼 */}
+        <div className="relative mb-3">
+          <div className="speech-bubble-float flex justify-center mb-3">
+            <div
+              className="relative inline-flex items-center px-4 py-2 rounded-full text-sm font-bold"
+              style={{ background: '#5B4EFF', color: '#FFFFFF' }}
+            >
+              ⭐️ 2026 이북리더기 최신자료가 무료
+              <span
+                className="absolute left-1/2 -translate-x-1/2 -bottom-[7px]"
+                style={{
+                  width: 0,
+                  height: 0,
+                  borderLeft: '7px solid transparent',
+                  borderRight: '7px solid transparent',
+                  borderTop: '7px solid #5B4EFF',
+                }}
+              />
+            </div>
+          </div>
+          <button
+            onClick={handleShare}
+            className="w-full py-4 text-white font-bold text-base rounded-2xl transition-all duration-150 active:scale-[0.98]"
+            style={{ background: '#1C1B18' }}
           >
-            📖 이북리더기 더 알아보기
-          </a>
+            {shareState === 'copied' ? '링크가 복사됐어요! ✓' : '친구에게 공유하기 →'}
+          </button>
+        </div>
+
+        {/* 시크릿 팝업 */}
+        {secretVisible && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center px-5"
+            style={{ background: 'rgba(0,0,0,0.45)' }}
+            onClick={() => setSecretVisible(false)}
+          >
+            <div
+              className="relative w-full max-w-sm rounded-3xl p-6"
+              style={{ background: '#FFFFFF', animation: 'fade-slide-in 0.3s ease both' }}
+              onClick={e => e.stopPropagation()}
+            >
+              <button
+                onClick={() => setSecretVisible(false)}
+                className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full text-lg font-medium"
+                style={{ color: '#9A9994', background: '#F3F2EF' }}
+              >
+                ×
+              </button>
+              <div
+                className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4 text-2xl"
+                style={{ background: '#F3F2EF' }}
+              >
+                🔓
+              </div>
+              <h2 className="text-2xl font-black mb-2 leading-snug" style={{ color: '#1C1B18' }}>
+                공유해주셔서 감사합니다🎉
+              </h2>
+              <p className="text-sm leading-relaxed mb-5" style={{ color: '#6B6A66' }}>
+                <strong style={{ color: '#1C1B18' }}>2024~2026년 출시된 이북리더기의 스펙</strong>과<br />{' '}
+                <strong style={{ color: '#1C1B18' }}>&apos;제품의 장/단점이 상세히 적힌&apos;</strong>자료를 <strong style={{ color: '#1C1B18' }}>무료</strong>로 받아가세요
+              </p>
+              
+              <a
+                href="http://bit.ly/4dVhha4"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={handleNotionClick}
+                className="flex items-center justify-center gap-2 w-full py-4 rounded-2xl font-bold text-white text-base"
+                style={{ background: '#5B4EFF' }}
+              >
+                31종 이북리더기 자료 열람하기 ↗
+              </a>
+            </div>
+          </div>
         )}
 
         {/* 다시하기 */}

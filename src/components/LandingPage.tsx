@@ -51,7 +51,7 @@ export function LandingPage({ onStart }: LandingPageProps) {
           className="inline-block text-xs font-medium tracking-wide mb-5 px-3 py-1.5 rounded-full border"
           style={{ color: '#6B6A66', borderColor: '#DDDCD8', background: 'rgba(255,255,255,0.85)' }}
         >
-          독서도 장비빨?
+          독서도 장비빨이다
         </span>
 
         {/* 제목 */}
@@ -109,7 +109,7 @@ export function LandingPage({ onStart }: LandingPageProps) {
           내 맞춤 기기 찾기 →
         </button>
 
-        <p className="mt-4 text-xs" style={{ color: '#9A9994' }}>약 1분 소요 · 5가지 질문</p>
+        <p className="mt-4 text-xs" style={{ color: '#9A9994' }}>약 1분 소요 · 4가지 질문</p>
       </div>
     </div>
   )
