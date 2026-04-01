@@ -14,6 +14,7 @@ export const metadata: Metadata = {
     title: '이북리더기 지름신 판독기',
     description: '나에게 맞는 이북리더기 추천 테스트 — 딱 3가지 질문으로 알아보세요',
     type: 'website',
+    images: [{ url: '/og-image.png', width: 1200, height: 630 }],
   },
 };
 

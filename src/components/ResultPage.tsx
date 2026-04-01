@@ -42,8 +42,6 @@ export function ResultPage({ result, onRestart }: ResultPageProps) {
 
     const shareUrl = getShareUrl()
     const shareData = {
-      title: '이북리더기 추천 테스트',
-      text: `나는 "${result.resultType}"! 이북리더기로 책 읽을 확률 ${result.probability}%`,
       url: shareUrl,
     }
 
