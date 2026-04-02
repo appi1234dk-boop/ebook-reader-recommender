@@ -13,19 +13,6 @@ interface ResultPageProps {
 export function ResultPage({ result, onRestart }: ResultPageProps) {
   const [shareState, setShareState] = useState<'idle' | 'copied'>('idle')
   const [secretVisible, setSecretVisible] = useState(false)
-  const [flippedCards, setFlippedCards] = useState<Set<string>>(new Set())
-
-  const toggleCard = useCallback((id: string) => {
-    setFlippedCards(prev => {
-      const next = new Set(prev)
-      if (next.has(id)) {
-        next.delete(id)
-      } else {
-        next.add(id)
-      }
-      return next
-    })
-  }, [])
 
   const getShareUrl = useCallback(() => {
     const base = typeof window !== 'undefined' ? window.location.origin : ''
@@ -91,30 +78,22 @@ export function ResultPage({ result, onRestart }: ResultPageProps) {
     track('notion_click', { type: result.resultType })
   }, [result.resultType])
 
-  // E-ink 스타일: 확률에 따라 다크/미드/라이트 처리
-  const badgeStyle =
-    result.probability >= 70
-      ? { background: '#1C1B18', color: '#FFFFFF' }
-      : result.probability >= 50
-      ? { background: '#E8E7E3', color: '#4A4946' }
-      : { background: '#E8E7E3', color: '#9A9994' }
-
   return (
     <div className="min-h-screen flex items-center justify-center px-5 py-12" style={{ background: '#EDECE8' }}>
       <div className="max-w-md w-full">
-        {/* 결과 헤더 */}
+        {/* 독서 유형 헤더 */}
         <div className="text-center mb-8">
-          <span
-            className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold mb-4 tabular-nums"
-            style={badgeStyle}
+          <div
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold mb-4"
+            style={{ background: '#1C1B18', color: '#FFFFFF' }}
           >
-            인생템일 확률 {result.probability}%
-          </span>
-          <h2 className="text-2xl font-black leading-snug mb-4 whitespace-pre-line" style={{ color: '#1C1B18' }}>
-            {result.resultType}
+            📖 당신의 독서 유형
+          </div>
+          <h2 className="text-3xl font-black leading-snug mb-4" style={{ color: '#1C1B18' }}>
+            {result.aiContent?.readingType ?? result.resultType}
           </h2>
-          <p className="text-sm leading-relaxed max-w-xs mx-auto whitespace-pre-line" style={{ color: '#6B6A66' }}>
-            {result.description}
+          <p className="text-sm leading-relaxed max-w-xs mx-auto" style={{ color: '#6B6A66' }}>
+            {result.aiContent?.usage ?? result.description}
           </p>
         </div>
 
@@ -122,109 +101,53 @@ export function ResultPage({ result, onRestart }: ResultPageProps) {
         <div className="h-px mb-6" style={{ background: '#DDDCD8' }} />
 
         {/* 추천 기기 */}
-        <h3 className="text-xs font-semibold uppercase tracking-widest mb-4 text-center" style={{ color: '#9A9994' }}>
-          추천 기기
-        </h3>
-        <div className="flex gap-3 mb-8">
-          {[
-            { device: result.primary,   badge: '1순위', highlight: true,  reasons: result.primaryReasons   },
-            { device: result.secondary, badge: '2순위', highlight: false, reasons: result.secondaryReasons },
-          ].map(({ device, badge, highlight, reasons }) => {
-            const isFlipped = flippedCards.has(device.id)
+        <div className="mb-8">
+          {(() => {
+            const device = result.primary
+            const reasons = result.primaryReasons
             return (
               <div
-                key={device.id}
-                className="flex-1 rounded-2xl border cursor-pointer select-none"
-                style={{
-                  perspective: '1000px',
-                  height: '320px',
-                  borderColor: highlight ? '#1C1B18' : '#DDDCD8',
-                }}
-                onClick={() => toggleCard(device.id)}
+                className="w-full rounded-2xl border overflow-hidden"
+                style={{ background: '#FFFFFF', borderColor: '#DDDCD8' }}
               >
-                <div className={`device-card-inner${isFlipped ? ' flipped' : ''}`}>
-                  {/* 앞면 */}
-                  <div
-                    className="device-card-face device-card-front rounded-2xl flex flex-col items-center text-center gap-2 p-4"
-                    style={highlight
-                      ? { background: '#1C1B18' }
-                      : { background: '#FFFFFF' }
-                    }
-                  >
-                    <span
-                      className="text-xs font-bold px-2 py-0.5 rounded-full"
-                      style={highlight
-                        ? { background: 'rgba(255,255,255,0.15)', color: '#FFFFFF' }
-                        : { background: '#E8E7E3', color: '#6B6A66' }
-                      }
-                    >
-                      {badge}
-                    </span>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={device.imageUrl}
-                      alt={device.name}
-                      width={130}
-                      height={170}
-                      className="rounded-lg object-contain flex-1 min-h-0"
-                      style={highlight ? { filter: 'brightness(0.9)' } : undefined}
-                    />
-                    <div>
-                      <p className="text-xs mb-0.5" style={{ color: highlight ? 'rgba(255,255,255,0.55)' : '#9A9994' }}>
-                        {device.brand}
-                      </p>
-                      <p className="font-bold text-base leading-tight" style={{ color: highlight ? '#FFFFFF' : '#1C1B18' }}>
-                        {device.name}
-                      </p>
-                    </div>
-                  </div>
+                {/* 제품 이미지 */}
+                <div className="relative w-full bg-[#F3F2EF]" style={{ aspectRatio: '1 / 1' }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={device.imageUrl}
+                    alt={device.name}
+                    className="absolute inset-0 w-full h-full object-contain"
+                  />
+                </div>
 
-                  {/* 뒷면 */}
-                  <div
-                    className="device-card-face device-card-back rounded-2xl flex flex-col p-4 gap-2"
-                    style={highlight
-                      ? { background: '#1C1B18' }
-                      : { background: '#FFFFFF' }
-                    }
-                  >
-                    <p className="text-xs font-bold text-center mb-1" style={{ color: highlight ? 'rgba(255,255,255,0.55)' : '#9A9994' }}>
-                      {device.name}
-                    </p>
-                    <div className="flex flex-col gap-1.5 flex-1 justify-center">
-                      {[
-                        { label: '화면', value: device.size },
-                        { label: '물리버튼', value: device.physicalButton ? 'YES' : 'NO' },
-                        { label: '가격대', value: device.priceRange },
-                        { label: '출시', value: device.releaseYear },
-                        { label: 'Android', value: device.androidVersion },
-                      ].map(({ label, value }) => (
-                        <div key={label} className="flex items-center justify-between gap-1">
-                          <span
-                            className="text-xs"
-                            style={{ color: highlight ? 'rgba(255,255,255,0.45)' : '#9A9994' }}
-                          >
-                            {label}
-                          </span>
-                          <span
-                            className="text-xs font-semibold text-right"
-                            style={{ color: highlight ? '#FFFFFF' : '#1C1B18' }}
-                          >
-                            {value}
-                          </span>
-                        </div>
-                      ))}
+                {/* 텍스트 정보 */}
+                <div className="px-5 py-5 flex flex-col gap-1">
+                  <p className="text-sm font-semibold" style={{ color: '#5B4EFF' }}>
+                    {device.size} / {device.releaseYear} 출시
+                  </p>
+                  <p className="text-xl font-black leading-snug" style={{ color: '#1C1B18' }}>
+                    {device.brand} {device.name}
+                  </p>
+                  <p className="text-sm" style={{ color: '#9A9994' }}>
+                    {device.priceRange}
+                  </p>
+                  {(result.aiContent?.reason || reasons.length > 0) && (
+                    <div className="mt-3 pt-3 border-t" style={{ borderColor: '#F3F2EF' }}>
+                      <span
+                        className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold mb-2"
+                        style={{ background: '#EEF0FF', color: '#5B4EFF' }}
+                      >
+                        🤖 북덕살롱 AI 추천
+                      </span>
+                      <p className="text-sm leading-relaxed" style={{ color: '#6B6A66' }}>
+                        {result.aiContent?.reason ?? reasons.join(' ')}
+                      </p>
                     </div>
-                    <p
-                      className="text-center text-xs mt-1"
-                      style={{ color: highlight ? 'rgba(255,255,255,0.3)' : '#DDDCD8' }}
-                    >
-                      탭하면 돌아가요
-                    </p>
-                  </div>
+                  )}
                 </div>
               </div>
             )
-          })}
+          })()}
         </div>
 
         {/* 말풍선 + 공유 버튼 */}

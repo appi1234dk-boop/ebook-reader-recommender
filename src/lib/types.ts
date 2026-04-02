@@ -12,6 +12,14 @@ export interface Device {
   physicalButton: boolean
   hasColor: boolean
   releaseYear: string
+  origin: 'korea' | 'china'
+  priceTier: 'entry' | 'mid' | 'midHigh' | 'high'
+}
+
+export interface AiContent {
+  readingType: string
+  usage: string
+  reason: string
 }
 
 export interface RecommendationResult {
@@ -22,6 +30,7 @@ export interface RecommendationResult {
   resultType: string
   probability: number
   description: string
+  aiContent?: AiContent
 }
 
 export interface AnalyticsEventPayload {

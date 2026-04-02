@@ -13,6 +13,8 @@ export const DEVICES: Record<string, Device> = {
     physicalButton: false,
     hasColor: false,
     releaseYear: '2024년',
+    origin: 'china',
+    priceTier: 'entry',
   },
   b6: {
     id: 'b6',
@@ -26,6 +28,8 @@ export const DEVICES: Record<string, Device> = {
     physicalButton: false,
     hasColor: true,
     releaseYear: '2025년',
+    origin: 'china',
+    priceTier: 'mid',
   },
   comma: {
     id: 'comma',
@@ -39,6 +43,8 @@ export const DEVICES: Record<string, Device> = {
     physicalButton: true,
     hasColor: false,
     releaseYear: '2025년',
+    origin: 'korea',
+    priceTier: 'mid',
   },
   sam7: {
     id: 'sam7',
@@ -52,6 +58,8 @@ export const DEVICES: Record<string, Device> = {
     physicalButton: true,
     hasColor: true,
     releaseYear: '2026년',
+    origin: 'korea',
+    priceTier: 'mid',
   },
   go7: {
     id: 'go7',
@@ -65,6 +73,8 @@ export const DEVICES: Record<string, Device> = {
     physicalButton: true,
     hasColor: true,
     releaseYear: '2025년',
+    origin: 'china',
+    priceTier: 'midHigh',
   },
   leaf5: {
     id: 'leaf5',
@@ -78,6 +88,8 @@ export const DEVICES: Record<string, Device> = {
     physicalButton: true,
     hasColor: true,
     releaseYear: '2025년',
+    origin: 'china',
+    priceTier: 'midHigh',
   },
   palette: {
     id: 'palette',
@@ -91,6 +103,8 @@ export const DEVICES: Record<string, Device> = {
     physicalButton: true,
     hasColor: true,
     releaseYear: '2025년',
+    origin: 'korea',
+    priceTier: 'midHigh',
   },
   ocean5pro: {
     id: 'ocean5pro',
@@ -104,19 +118,23 @@ export const DEVICES: Record<string, Device> = {
     physicalButton: true,
     hasColor: false,
     releaseYear: '2025년',
+    origin: 'china',
+    priceTier: 'high',
   },
   booksT10C: {
     id: 'booksT10C',
     name: '북스 T10C',
     brand: '오닉스',
     size: '10.3인치',
-    priceRange: '60~90만원',
+    priceRange: '62만원',
     imageUrl: 'https://thumbnail.coupangcdn.com/thumbnails/remote/492x492ex/image/vendor_inventory/0adb/55f96638df8e55b350a0e77704be2e9c54f884bdcb1a76d2ab09dce3ff53.jpg',
     description: 'PDF 전공서적과 만화책을 실제 책처럼 크게 볼 수 있는 대화면. 필기 기능으로 공부에도 최적.',
     androidVersion: '안드로이드 12',
     physicalButton: false,
     hasColor: true,
     releaseYear: '2024년',
+    origin: 'china',
+    priceTier: 'high',
   },
   b751c: {
     id: 'b751c',
@@ -130,6 +148,8 @@ export const DEVICES: Record<string, Device> = {
     physicalButton: true,
     hasColor: true,
     releaseYear: '2024년',
+    origin: 'china',
+    priceTier: 'mid',
   },
   cremaC: {
     id: 'cremaC',
@@ -143,6 +163,8 @@ export const DEVICES: Record<string, Device> = {
     physicalButton: true,
     hasColor: true,
     releaseYear: '2025년',
+    origin: 'korea',
+    priceTier: 'midHigh',
   },
   m103: {
     id: 'm103',
@@ -156,6 +178,8 @@ export const DEVICES: Record<string, Device> = {
     physicalButton: false,
     hasColor: false,
     releaseYear: '2024년',
+    origin: 'china',
+    priceTier: 'midHigh',
   },
 }
 
@@ -163,15 +187,15 @@ export const DEVICES: Record<string, Device> = {
 const DEVICE_REASON_SIGNALS: Record<string, string[]> = {
   poke6:     ['webnovel', 'commute', 'light'],
   b6:        ['webnovel', 'comic', 'color'],
-  comma:     ['commute', 'light', 'button', 'bed'],
-  sam7:      ['nonfiction', 'button', 'bed'],
+  comma:     ['commute', 'light', 'button', 'bed', 'domestic'],
+  sam7:      ['nonfiction', 'button', 'bed', 'domestic'],
   go7:       ['nonfiction', 'button', 'desk'],
   leaf5:     ['bed', 'button', 'color'],
-  palette:   ['comic', 'color', 'button'],
+  palette:   ['comic', 'color', 'button', 'domestic'],
   ocean5pro: ['nonfiction', 'button', 'desk'],
   booksT10C: ['academic', 'pen', 'color'],
   b751c:     ['comic', 'color', 'button'],
-  cremaC:    ['comic', 'color', 'button'],
+  cremaC:    ['comic', 'color', 'button', 'domestic'],
   m103:      ['academic', 'pen', 'desk'],
 }
 
@@ -187,6 +211,7 @@ const REASON_FRAGMENTS: Record<string, string> = {
   button:     '물리 버튼으로 화면 터치 없이 한 손 페이지 넘기기가 돼요',
   color:      '컬러 e-ink로 표지와 삽화를 생생하게 즐길 수 있어요',
   pen:        'PDF에 직접 필기하며 공부·메모할 수 있어요',
+  domestic:   '국내 정식 출시 제품으로 한국에서 바로 배송받을 수 있어요',
 }
 
 function getDeviceReasons(deviceId: string, userAnswers: string[]): string[] {
@@ -223,7 +248,12 @@ export function getRecommendation(answers: Record<number, string>): Recommendati
   if (vals.includes('nonfiction')){ scores.sam7 += 4; scores.go7 += 2; scores.ocean5pro += 1 }
   if (vals.includes('academic'))  {
     scores.booksT10C += 6; scores.m103 += 4
-    scores.poke6 -= 5; scores.b6 -= 5; scores.comma -= 5
+    // 7인치 이하는 논문 읽기에 부족 — 크게 감점
+    for (const [id, device] of Object.entries(DEVICES)) {
+      if (!device.size.includes('10') && !device.size.includes('13')) {
+        scores[id] -= 8
+      }
+    }
   }
   if (vals.includes('comic'))     {
     scores.palette += 5; scores.b751c += 3
@@ -249,6 +279,33 @@ export function getRecommendation(answers: Record<number, string>): Recommendati
     for (const [id, device] of Object.entries(DEVICES)) {
       const isLarge = device.size.includes('10') || device.size.includes('13')
       scores[id] += isLarge ? 4 : -10
+    }
+  }
+
+  // Q5 예산 시그널
+  const TIER_ORDER = ['entry', 'mid', 'midHigh', 'high']
+  const budgetMaxTier: Record<string, string> = {
+    budget_under20: 'entry',
+    budget_30s:     'mid',
+    budget_40s:     'midHigh',
+    budget_over50:  'high',
+  }
+  const budgetVal = vals.find(v => v.startsWith('budget_'))
+  if (budgetVal) {
+    const maxTierIdx = TIER_ORDER.indexOf(budgetMaxTier[budgetVal])
+    for (const [id, device] of Object.entries(DEVICES)) {
+      const deviceTierIdx = TIER_ORDER.indexOf(device.priceTier)
+      const diff = deviceTierIdx - maxTierIdx
+      if (diff <= 0)        scores[id] += 4   // 예산 범위 내
+      else if (diff === 1)  scores[id] -= 1   // 한 단계 초과 (AI 코멘트로 처리)
+      else                  scores[id] -= 5   // 두 단계 이상 초과
+    }
+  }
+
+  // Q6 배송 시그널
+  if (vals.includes('domestic')) {
+    for (const [id, device] of Object.entries(DEVICES)) {
+      scores[id] += device.origin === 'korea' ? 4 : -4
     }
   }
 

@@ -8,10 +8,10 @@ const geistSans = Geist({
 });
 
 export const metadata: Metadata = {
-  title: '이북리더기 지름신 판독기',
+  title: '이북리더기 살까말까?',
   description: '내 성향에 딱 맞는 이북리더기는?',
   openGraph: {
-    title: '이북리더기 지름신 판독기',
+    title: '이북리더기 살까말까?',
     description: '내 성향에 딱 맞는 이북리더기는?',
     type: 'website',
     images: [{ url: '/og-image.png', width: 1200, height: 630 }],

@@ -7,45 +7,93 @@ import { AnalyzingScreen } from './AnalyzingScreen'
 import { ResultPage } from './ResultPage'
 import { track, captureUTMParams } from '@/lib/analytics'
 import { getRecommendation } from '@/lib/devices'
-import type { AppStep, RecommendationResult } from '@/lib/types'
+import type { AppStep, RecommendationResult, AiContent } from '@/lib/types'
+
+async function fetchAiContent(
+  answers: Record<number, string>,
+  device: RecommendationResult['primary']
+): Promise<AiContent | null> {
+  try {
+    const res = await fetch('/api/recommend', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        answers,
+        device: {
+          name: device.name,
+          brand: device.brand,
+          size: device.size,
+          priceRange: device.priceRange,
+          physicalButton: device.physicalButton,
+          hasColor: device.hasColor,
+          releaseYear: device.releaseYear,
+          priceTier: device.priceTier,
+          origin: device.origin,
+        },
+      }),
+    })
+    const data = await res.json()
+    return data.aiContent ?? null
+  } catch {
+    return null
+  }
+}
 
 const QUESTIONS = [
   {
     step: 1,
-    question: '현재 당신의 독서 상태는 어떤가요?',
+    question: 'Q1. 요즘 책은 얼마나 읽고있나요?',
     options: [
-      { value: 'addict',  label: '숨 쉬듯 읽는 활자 중독자' },
-      { value: 'casual',  label: '한 달에 한두 번 잠자는 뇌를 깨움' },
-      { value: 'wannabe', label: '요즘 통 못 읽어서 장비빨 희망' },
+      { value: 'addict',  label: '일주일에 1권은 읽어요' },
+      { value: 'casual',  label: '한 달에 1~2권 정도..?' },
+      { value: 'wannabe', label: '바빠서 거의 못 읽고 있어요' },
     ],
   },
   {
     step: 2,
-    question: '어떤 책을 주로 읽으시나요?',
+    question: 'Q2. 어떤 책을 주로 읽으시나요?',
     options: [
-      { value: 'webnovel',   label: '물 흐르듯 읽는 소설 & 웹소설' },
-      { value: 'nonfiction', label: '필요한 내용만 뽑아 읽는 비문학' },
-      { value: 'academic',   label: '전문 지식 가득한 논문 & 원서' },
-      { value: 'comic',      label: '시간 가는 줄 모르는 만화책' },
+      { value: 'webnovel',   label: '소설 & 웹소설, 물 흐르듯 읽는게 좋아요' },
+      { value: 'nonfiction', label: '비문학! 필요한 내용만 뽑아 읽어요' },
+      { value: 'academic',   label: '논문이요. 전문 지식을 주로 습득합니다' },
+      { value: 'comic',      label: '만화책 읽으면서 시간을 보내요' },
     ],
   },
   {
     step: 3,
-    question: '주로 어디서 책을 읽으시나요?',
+    question: 'Q3. 주로 어디서 책을 읽으시나요?',
     options: [
-      { value: 'commute', label: '지옥철/버스 (무조건 한 손!)' },
-      { value: 'bed',     label: '자기 전 침대에서 뒹굴뒹굴' },
-      { value: 'desk',    label: '책상이나 카페에서 각 잡고' },
+      { value: 'commute', label: '지하철, 버스처럼 이동중에 주로 읽어요' },
+      { value: 'bed',     label: '자기 전에 침대에서 눕독해요' },
+      { value: 'desk',    label: '집이나 카페에서 각 잡고 읽어요' },
     ],
   },
   {
     step: 4,
-    question: '이북리더기에서 포기 못 하는 기능은?',
+    question: 'Q4. 이북리더기에서 포기 못 하는 기능은?',
     options: [
-      { value: 'light',  label: '압도적인 가벼움' },
-      { value: 'button', label: '딸깍거리는 물리 버튼' },
-      { value: 'color',  label: '생생한 컬러 화면' },
-      { value: 'pen',    label: '자유로운 펜 필기' },
+      { value: 'light',  label: '가벼운게 최고!' },
+      { value: 'button', label: '물리버튼이 있으면 좋겠어요' },
+      { value: 'color',  label: '생생한 컬러 화면이 필요해요' },
+      { value: 'pen',    label: '스타일러스 펜이 꼭 필요해요' },
+    ],
+  },
+  {
+    step: 5,
+    question: 'Q5. 예산은 얼마나 생각하고 계세요?',
+    options: [
+      { value: 'budget_under20', label: '20만원 미만이면 좋겠어요' },
+      { value: 'budget_30s',     label: '30만원대까지는 괜찮아요' },
+      { value: 'budget_40s',     label: '40만원대까지 생각하고 있어요' },
+      { value: 'budget_over50',  label: '50만원 이상도 괜찮아요' },
+    ],
+  },
+  {
+    step: 6,
+    question: 'Q6. 해외직구 상품도 괜찮으신가요?',
+    options: [
+      { value: 'import',   label: '중국에서 넘어와도 괜찮아요' },
+      { value: 'domestic', label: '한국에서 배송받고 싶어요' },
     ],
   },
 ]
@@ -62,6 +110,7 @@ export function EbookQuiz({ initialUtmSource }: EbookQuizProps) {
   const [isExiting, setIsExiting] = useState(false)
   const pendingAnswerRef = useRef<string | null>(null)
   const pendingAnswersRef = useRef<Record<number, string> | null>(null)
+  const aiPromiseRef = useRef<Promise<AiContent | null> | null>(null)
 
   useEffect(() => {
     captureUTMParams()
@@ -99,6 +148,7 @@ export function EbookQuiz({ initialUtmSource }: EbookQuizProps) {
         track('quiz_complete', { answers: newAnswers })
         const recommendation = getRecommendation(newAnswers)
         setResult(recommendation)
+        aiPromiseRef.current = fetchAiContent(newAnswers, recommendation.primary)
         setStep('analyzing')
       }
 
@@ -109,7 +159,11 @@ export function EbookQuiz({ initialUtmSource }: EbookQuizProps) {
     return () => clearTimeout(timer)
   }, [isExiting, quizStep])
 
-  const handleAnalyzingComplete = useCallback(() => {
+  const handleAnalyzingComplete = useCallback(async () => {
+    const aiContent = await (aiPromiseRef.current ?? Promise.resolve(null)).catch(() => null)
+    if (aiContent) {
+      setResult(prev => prev ? { ...prev, aiContent } : prev)
+    }
     if (result) {
       track('result_view', {
         type: result.resultType,

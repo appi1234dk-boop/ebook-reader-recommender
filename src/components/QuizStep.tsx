@@ -54,39 +54,61 @@ export function QuizStep({
   }
 
   const isUrgent = secondsLeft <= 10
+  const isShaking = secondsLeft <= 5
   const timerPct = (secondsLeft / TIMER_SECONDS) * 100
   const encouragement = ENCOURAGEMENTS[questionNumber - 1] ?? ENCOURAGEMENTS[0]
+
+  // SVG 원형 타이머 계산
+  const radius = 38
+  const circumference = 2 * Math.PI * radius
+  const strokeDashoffset = circumference * (1 - timerPct / 100)
+  const timerColor = isUrgent ? '#E53E3E' : '#1C1B18'
 
   return (
     <div className="flex items-center justify-center px-5" style={{ minHeight: '100dvh', background: '#EDECE8' }}>
       <div className={`max-w-md w-full py-10 ${isExiting ? 'quiz-card-exit' : 'quiz-card-enter'}`} style={{ marginBottom: '8dvh' }}>
 
-        {/* 타이머 바 */}
-        <div style={{ height: '2px', background: '#DDDCD8', borderRadius: '1px' }}>
-          <div
-            style={{
-              height: '100%',
-              width: `${timerPct}%`,
-              background: isUrgent ? '#1C1B18' : '#9A9994',
-              borderRadius: '1px',
-              transition: 'width 1s linear, background 0.3s',
-            }}
-          />
-        </div>
-
-        {/* 타이머 숫자 — 중앙 강조 */}
-        <div className="flex justify-center mt-3 mb-8">
-          <p
-            className={`tabular-nums font-bold${isUrgent ? ' alarm-shake' : ''}`}
-            style={{
-              fontSize: '28px',
-              letterSpacing: '0.04em',
-              color: isUrgent ? '#1C1B18' : '#DDDCD8',
-              transition: 'color 0.3s',
-            }}
-          >
-            0:{String(secondsLeft).padStart(2, '0')}
-          </p>
+        {/* 원형 타이머 */}
+        <div className="flex justify-center mb-8">
+          <div className={isShaking ? 'alarm-shake' : ''} style={{ position: 'relative', width: 96, height: 96 }}>
+            <svg width="96" height="96" style={{ transform: 'rotate(-90deg) scaleY(-1)' }}>
+              {/* 배경 원 */}
+              <circle
+                cx="48" cy="48" r={radius}
+                fill="none"
+                stroke="#DDDCD8"
+                strokeWidth="4"
+              />
+              {/* 진행 원 */}
+              <circle
+                cx="48" cy="48" r={radius}
+                fill="none"
+                stroke={timerColor}
+                strokeWidth="4"
+                strokeLinecap="round"
+                strokeDasharray={circumference}
+                strokeDashoffset={strokeDashoffset}
+                style={{ transition: 'stroke-dashoffset 1s linear, stroke 0.3s' }}
+              />
+            </svg>
+            {/* 카운트다운 숫자 */}
+            <div
+              className="tabular-nums font-bold"
+              style={{
+                position: 'absolute',
+                inset: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '18px',
+                color: timerColor,
+                transition: 'color 0.3s',
+                letterSpacing: '-0.02em',
+              }}
+            >
+              {secondsLeft}
+            </div>
+          </div>
         </div>
 
         {/* 질문 */}

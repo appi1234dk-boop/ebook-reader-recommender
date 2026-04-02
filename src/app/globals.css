@@ -145,6 +145,27 @@ body {
   animation: float-y 2s ease-in-out infinite;
 }
 
+/* 태그 마퀴 스크롤 */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+.marquee-track {
+  animation: marquee 22s linear infinite;
+}
+
+/* AI 오브 파동 (랜딩 페이지) */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.ai-wave-1 { border-radius: 41% 59% 41% 59% / 54% 46% 54% 46%; animation: spin 4s linear infinite; }
+.ai-wave-2 { border-radius: 59% 41% 59% 41% / 46% 54% 46% 54%; animation: spin 5s linear infinite reverse; }
+.ai-wave-3 { border-radius: 48% 52% 43% 57% / 49% 51% 56% 44%; animation: spin 6s linear infinite; }
+.ai-wave-4 { border-radius: 52% 48% 57% 43% / 51% 49% 44% 56%; animation: spin 7s linear infinite reverse; }
+
 /* 기기 카드 플립 */
 .device-card-inner {
   transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
