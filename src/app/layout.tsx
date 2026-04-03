@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Geist } from 'next/font/google';
+import { Analytics } from '@vercel/analytics/next';
 import './globals.css';
 
 const geistSans = Geist({
@@ -25,7 +26,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko" className={`${geistSans.variable} h-full`} suppressHydrationWarning>
-      <body className="min-h-full antialiased" suppressHydrationWarning>{children}</body>
+      <body className="min-h-full antialiased" suppressHydrationWarning>{children}<Analytics /></body>
     </html>
   );
 }
