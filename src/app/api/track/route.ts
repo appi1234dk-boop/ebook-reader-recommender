@@ -1,5 +1,6 @@
-import { createServerClient } from '@/lib/supabase/server'
 import type { NextRequest } from 'next/server'
+
+const APPS_SCRIPT_URL = process.env.APPS_SCRIPT_URL
 
 export async function POST(request: NextRequest): Promise<Response> {
   try {
@@ -12,19 +13,27 @@ export async function POST(request: NextRequest): Promise<Response> {
     if (!event_type || typeof event_type !== 'string') {
       return Response.json({ error: 'invalid event_type' }, { status: 400 })
     }
+    if (!APPS_SCRIPT_URL) {
+      console.error('[track] APPS_SCRIPT_URL not configured')
+      return Response.json({ error: 'not configured' }, { status: 500 })
+    }
 
-    const supabase = await createServerClient()
-    const { error } = await supabase.from('analytics_events').insert({
-      session_id,
-      event_type,
-      data: data ?? {},
-      referrer: referrer ?? null,
-      utm_source: utm_source ?? null,
+    const res = await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        session_id,
+        event_type,
+        data: data ?? {},
+        referrer: referrer ?? null,
+        utm_source: utm_source ?? null,
+      }),
+      redirect: 'follow',
     })
 
-    if (error) {
-      console.error('[track] Supabase insert error:', error.message)
-      return Response.json({ error: 'db error' }, { status: 500 })
+    if (!res.ok) {
+      console.error('[track] Apps Script error:', res.status, await res.text())
+      return Response.json({ error: 'sheet error' }, { status: 500 })
     }
 
     return Response.json({ ok: true })
