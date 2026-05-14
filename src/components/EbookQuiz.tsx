@@ -114,7 +114,10 @@ export function EbookQuiz({ initialUtmSource }: EbookQuizProps) {
 
   useEffect(() => {
     captureUTMParams()
-    track('page_view', { utm_source: initialUtmSource })
+    const referredType = typeof window !== 'undefined'
+      ? new URLSearchParams(window.location.search).get('type')
+      : null
+    track('page_view', { utm_source: initialUtmSource, referred_type: referredType })
   }, [initialUtmSource])
 
   const handleStart = useCallback(() => {
@@ -167,9 +170,13 @@ export function EbookQuiz({ initialUtmSource }: EbookQuizProps) {
     if (result) {
       track('result_view', {
         type: result.resultType,
+        reading_type: result.readingType.code,
         rate: result.probability,
         device1: result.primary.id,
         device2: result.secondary.id,
+        primary_score: result.primaryScore,
+        secondary_score: result.secondaryScore,
+        max_score: result.maxScore,
       })
     }
     setStep('result')

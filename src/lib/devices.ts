@@ -1,4 +1,5 @@
 import type { Device, RecommendationResult } from './types'
+import { classifyReadingType } from './readingType'
 
 export const DEVICES: Record<string, Device> = {
   poke6: {
@@ -222,6 +223,85 @@ function getDeviceReasons(deviceId: string, userAnswers: string[]): string[] {
     .map(s => REASON_FRAGMENTS[s])
 }
 
+// 답변 → 카드에 노출할 매칭 키워드 라벨
+const MATCH_KEYWORD_LABELS: Record<string, string> = {
+  webnovel:   '웹소설 최적',
+  nonfiction: '비문학 최적',
+  academic:   '논문·전공',
+  comic:      '만화 최적',
+  commute:    '한 손 휴대',
+  bed:        '눕독 최적',
+  desk:       '집중 독서',
+  light:      '가벼움',
+  button:     '물리버튼',
+  color:      '컬러 화면',
+  pen:        '필기 가능',
+  domestic:   '국내 배송',
+}
+
+const TIER_ORDER_GLOBAL = ['entry', 'mid', 'midHigh', 'high'] as const
+const BUDGET_MAX_TIER: Record<string, string> = {
+  budget_under20: 'entry',
+  budget_30s:     'mid',
+  budget_40s:     'midHigh',
+  budget_over50:  'high',
+}
+
+// 사용자 답변 중 이 기기에 긍정적으로 작용한 항목을 라벨로 반환
+function getMatchedKeywords(deviceId: string, vals: string[]): string[] {
+  const device = DEVICES[deviceId]
+  const signals = DEVICE_REASON_SIGNALS[deviceId] ?? []
+  const matched: string[] = []
+
+  for (const v of vals) {
+    if (v === 'button' && device.physicalButton) matched.push(MATCH_KEYWORD_LABELS.button)
+    else if (v === 'color' && device.hasColor) matched.push(MATCH_KEYWORD_LABELS.color)
+    else if (v === 'light' && device.size === '6인치') matched.push(MATCH_KEYWORD_LABELS.light)
+    else if (v === 'pen' && (device.size.includes('10') || device.size.includes('13'))) matched.push(MATCH_KEYWORD_LABELS.pen)
+    else if (v === 'domestic' && device.origin === 'korea') matched.push(MATCH_KEYWORD_LABELS.domestic)
+    else if (v.startsWith('budget_')) {
+      const maxTier = BUDGET_MAX_TIER[v]
+      if (maxTier && TIER_ORDER_GLOBAL.indexOf(device.priceTier) <= TIER_ORDER_GLOBAL.indexOf(maxTier as typeof TIER_ORDER_GLOBAL[number])) {
+        matched.push('예산 적합')
+      }
+    } else if (signals.includes(v) && MATCH_KEYWORD_LABELS[v]) {
+      matched.push(MATCH_KEYWORD_LABELS[v])
+    }
+  }
+
+  return Array.from(new Set(matched)).slice(0, 4)
+}
+
+// 사용자 답변 조합 기준 만점 — 모든 시그널을 동시에 충족하는 가상의 기기가 받을 수 있는 최대 점수
+function getMaxScore(vals: string[]): number {
+  let max = 0
+
+  // Q2 장르: webnovel=poke6+4 / nonfiction=sam7+4 / academic=booksT10C+6 / comic=palette+5
+  if (vals.includes('academic')) max += 6
+  else if (vals.includes('comic')) max += 5
+  else if (vals.includes('webnovel') || vals.includes('nonfiction')) max += 4
+
+  // Q3 장소: commute/bed 만 가산점, desk 는 0
+  if (vals.includes('commute') || vals.includes('bed')) max += 3
+
+  // Q4 기능: color +4, button/light +3, pen +4
+  if (vals.includes('color')) max += 4
+  else if (vals.includes('button') || vals.includes('light')) max += 3
+  if (vals.includes('pen')) max += 4
+
+  // Q5 예산 (범위 내) +4
+  if (vals.some(v => v.startsWith('budget_'))) max += 4
+
+  // Q6 직구: domestic 일 때만 +4 (origin=korea 가산)
+  if (vals.includes('domestic')) max += 4
+
+  return Math.max(1, max)
+}
+
+function clampDisplayScore(rawScore: number, maxScore: number): number {
+  return Math.max(0, Math.min(maxScore, rawScore))
+}
+
 export function getRecommendation(answers: Record<number, string>): RecommendationResult {
   const vals = Object.values(answers)
 
@@ -318,6 +398,18 @@ export function getRecommendation(answers: Record<number, string>): Recommendati
   const primaryReasons   = getDeviceReasons(primary.id, vals)
   const secondaryReasons = getDeviceReasons(secondary.id, vals)
 
+  // 4-1. 매칭 키워드 + 카운트 + 추천 점수 (raw score 기반, 답변 조합별 만점 대비)
+  const primaryMatchedKeywords   = getMatchedKeywords(primary.id, vals)
+  const secondaryMatchedKeywords = getMatchedKeywords(secondary.id, vals)
+  const primaryMatchCount   = primaryMatchedKeywords.length
+  const secondaryMatchCount = secondaryMatchedKeywords.length
+  const maxScore       = getMaxScore(vals)
+  const primaryScore   = clampDisplayScore(sorted[0][1], maxScore)
+  const secondaryScore = clampDisplayScore(sorted[1][1], maxScore)
+
+  // 4-2. 독서 유형 (장르 × 장소)
+  const readingType = classifyReadingType(answers)
+
   // 5. 확률 구간별 결과 타입
   let resultType: string, description: string
   if (probability >= 90) {
@@ -337,5 +429,21 @@ export function getRecommendation(answers: Record<number, string>): Recommendati
     description = '지금 당장은 조금 이른 타이밍이에요.\n하지만 장비빨에 끌린다면 한번 도전해봐도 좋아요!'
   }
 
-  return { primary, secondary, primaryReasons, secondaryReasons, resultType, probability, description }
+  return {
+    primary,
+    secondary,
+    primaryReasons,
+    secondaryReasons,
+    primaryScore,
+    secondaryScore,
+    maxScore,
+    primaryMatchCount,
+    secondaryMatchCount,
+    primaryMatchedKeywords,
+    secondaryMatchedKeywords,
+    resultType,
+    probability,
+    description,
+    readingType,
+  }
 }

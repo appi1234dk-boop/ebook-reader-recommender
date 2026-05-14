@@ -22,14 +22,28 @@ export interface AiContent {
   reason: string
 }
 
+export interface ReadingType {
+  code: string
+  name: string
+  subtitle: string
+}
+
 export interface RecommendationResult {
   primary: Device
   secondary: Device
   primaryReasons: string[]
   secondaryReasons: string[]
+  primaryScore: number
+  secondaryScore: number
+  maxScore: number
+  primaryMatchCount: number
+  secondaryMatchCount: number
+  primaryMatchedKeywords: string[]
+  secondaryMatchedKeywords: string[]
   resultType: string
   probability: number
   description: string
+  readingType: ReadingType
   aiContent?: AiContent
 }
 

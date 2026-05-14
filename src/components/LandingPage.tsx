@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { READING_TYPE_TABLE } from '@/lib/readingType'
 
 const MODELS = ['오닉스 포크6', '빅미 B6', '모안 콤마', '교보문고 SAM7', '오닉스 GO7 2세대', '오닉스 리프5', '크레마 팔레트', '아이리더 오션5 프로', '오닉스 북스 T10C']
 
@@ -11,6 +12,15 @@ interface LandingPageProps {
 export function LandingPage({ onStart }: LandingPageProps) {
   const [idx, setIdx] = useState(0)
   const [phase, setPhase] = useState<'idle' | 'exit' | 'enter'>('idle')
+  const [referredType, setReferredType] = useState<{ name: string; subtitle: string } | null>(null)
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const code = params.get('type')
+    if (code && READING_TYPE_TABLE[code]) {
+      setReferredType(READING_TYPE_TABLE[code])
+    }
+  }, [])
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -100,6 +110,24 @@ export function LandingPage({ onStart }: LandingPageProps) {
             ))}
           </div>
         </div>
+        {/* 친구 유형 뱃지 (공유 링크로 진입한 경우) */}
+        {referredType && (
+          <div
+            className="mb-5 px-4 py-3 rounded-2xl border text-left"
+            style={{ background: 'rgba(255,255,255,0.92)', borderColor: '#DDDCD8' }}
+          >
+            <p className="text-[11px] font-bold mb-1" style={{ color: '#5B4EFF' }}>
+              💬 친구의 결과
+            </p>
+            <p className="text-sm font-black leading-snug" style={{ color: '#1C1B18' }}>
+              친구는 <span style={{ color: '#5B4EFF' }}>&ldquo;{referredType.name}&rdquo;</span>가 나왔어요
+            </p>
+            <p className="text-xs mt-0.5" style={{ color: '#6B6A66' }}>
+              당신은 어떤 유형일까요?
+            </p>
+          </div>
+        )}
+
         {/* 제목 */}
         <h1
           className="text-[2.1rem] font-bold leading-tight mb-4 tracking-tight"
