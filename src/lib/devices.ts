@@ -406,6 +406,7 @@ export function getRecommendation(answers: Record<number, string>): Recommendati
   const maxScore       = getMaxScore(vals)
   const primaryScore   = clampDisplayScore(sorted[0][1], maxScore)
   const secondaryScore = clampDisplayScore(sorted[1][1], maxScore)
+  const isLowMatch     = primaryScore / maxScore < 0.4
 
   // 4-2. 독서 유형 (장르 × 장소)
   const readingType = classifyReadingType(answers)
@@ -445,5 +446,6 @@ export function getRecommendation(answers: Record<number, string>): Recommendati
     probability,
     description,
     readingType,
+    isLowMatch,
   }
 }

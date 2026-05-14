@@ -44,6 +44,7 @@ export interface RecommendationResult {
   probability: number
   description: string
   readingType: ReadingType
+  isLowMatch: boolean
   aiContent?: AiContent
 }
 

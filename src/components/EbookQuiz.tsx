@@ -177,6 +177,7 @@ export function EbookQuiz({ initialUtmSource }: EbookQuizProps) {
         primary_score: result.primaryScore,
         secondary_score: result.secondaryScore,
         max_score: result.maxScore,
+        is_low_match: result.isLowMatch,
       })
     }
     setStep('result')

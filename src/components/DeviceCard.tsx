@@ -12,6 +12,7 @@ interface DeviceCardProps {
   matchedKeywords: string[]
   aiReason?: string
   fallbackReasons: string[]
+  isLowMatch?: boolean
 }
 
 export function DeviceCard({
@@ -23,6 +24,7 @@ export function DeviceCard({
   matchedKeywords,
   aiReason,
   fallbackReasons,
+  isLowMatch = false,
 }: DeviceCardProps) {
   const gaugePct = Math.max(0, Math.min(100, (score / maxScore) * 100))
   const [expanded, setExpanded] = useState(false)
@@ -73,30 +75,40 @@ export function DeviceCard({
         </p>
       </div>
 
-      {/* 추천 점수 게이지 + 매칭 카운트 */}
-      <div className="px-4 pt-4">
-        <div className="flex items-baseline justify-between mb-1.5">
-          <span className="text-xs font-semibold" style={{ color: '#6B6A66' }}>
-            추천 점수
-          </span>
-          <span className="font-black tabular-nums" style={{ color: '#5B4EFF' }}>
-            <span className="text-lg">{score}</span>
-            <span className="text-xs" style={{ color: '#9A9994' }}> / {maxScore}점</span>
-          </span>
+      {/* 추천 점수 게이지 (일반) 또는 매칭 카운트 강조 (low match) */}
+      {isLowMatch ? (
+        <div className="px-4 pt-4">
+          <p className="text-base font-bold leading-snug" style={{ color: '#1C1B18' }}>
+            6개 답변 중,{' '}
+            <span style={{ color: '#5B4EFF' }}>{matchCount}개</span>
+            {' '}조건이 일치해요
+          </p>
         </div>
-        <div
-          className="relative w-full h-2 rounded-full overflow-hidden"
-          style={{ background: '#F3F2EF' }}
-        >
+      ) : (
+        <div className="px-4 pt-4">
+          <div className="flex items-baseline justify-between mb-1.5">
+            <span className="text-xs font-semibold" style={{ color: '#6B6A66' }}>
+              추천 점수
+            </span>
+            <span className="font-black tabular-nums" style={{ color: '#5B4EFF' }}>
+              <span className="text-lg">{score}</span>
+              <span className="text-xs" style={{ color: '#9A9994' }}> / {maxScore}점</span>
+            </span>
+          </div>
           <div
-            className="absolute inset-y-0 left-0 rounded-full transition-all"
-            style={{ width: `${gaugePct}%`, background: '#5B4EFF' }}
-          />
+            className="relative w-full h-2 rounded-full overflow-hidden"
+            style={{ background: '#F3F2EF' }}
+          >
+            <div
+              className="absolute inset-y-0 left-0 rounded-full transition-all"
+              style={{ width: `${gaugePct}%`, background: '#5B4EFF' }}
+            />
+          </div>
+          <p className="text-[11px] mt-1.5" style={{ color: '#9A9994' }}>
+            당신 답변 6개 중 <strong style={{ color: '#1C1B18' }}>{matchCount}개</strong>와 매칭됐어요
+          </p>
         </div>
-        <p className="text-[11px] mt-1.5" style={{ color: '#9A9994' }}>
-          당신 답변 6개 중 <strong style={{ color: '#1C1B18' }}>{matchCount}개</strong>와 매칭됐어요
-        </p>
-      </div>
+      )}
 
       {/* 객관 매칭 키워드 */}
       {keywordLine && (
@@ -104,11 +116,11 @@ export function DeviceCard({
           className="mx-4 mt-4 px-3 py-2.5 rounded-xl"
           style={{ background: '#EEF0FF' }}
         >
+          <p className="text-[11px] mb-0.5" style={{ color: '#6B6A66' }}>
+            일치하는 조건
+          </p>
           <p className="text-sm font-semibold leading-snug" style={{ color: '#5B4EFF' }}>
             {keywordLine}
-          </p>
-          <p className="text-[11px] mt-0.5" style={{ color: '#6B6A66' }}>
-            {matchedKeywords.length}개 조건이 일치해요
           </p>
         </div>
       )}

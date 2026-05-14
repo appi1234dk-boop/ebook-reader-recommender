@@ -196,6 +196,24 @@ export function ResultPage({ result, onRestart }: ResultPageProps) {
           </div>
         </div>
 
+        {/* 점수가 너무 낮을 때 — 라인업에 딱 맞는 기기가 없음을 안내 */}
+        {result.isLowMatch && (
+          <div
+            className="mb-4 px-4 py-3 rounded-2xl border flex gap-3 items-start"
+            style={{ background: '#FFF8EC', borderColor: '#F0DCA8' }}
+          >
+            <span className="text-lg leading-none mt-0.5">💡</span>
+            <div className="flex-1">
+              <p className="text-sm font-bold leading-snug mb-0.5" style={{ color: '#8A6500' }}>
+                조건에 딱 맞는 기기가 없어요
+              </p>
+              <p className="text-xs leading-relaxed" style={{ color: '#A38033' }}>
+                선택하신 조건을 모두 충족하는 기기는 없지만, 가장 가까운 기기를 추천드려요.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* peek 캐러셀 — 1·2위 카드 */}
         <div className="mb-2">
           <div
@@ -217,6 +235,7 @@ export function ResultPage({ result, onRestart }: ResultPageProps) {
               matchedKeywords={result.primaryMatchedKeywords}
               aiReason={result.aiContent?.reason}
               fallbackReasons={result.primaryReasons}
+              isLowMatch={result.isLowMatch}
             />
             <DeviceCard
               device={result.secondary}
@@ -227,6 +246,7 @@ export function ResultPage({ result, onRestart }: ResultPageProps) {
               matchedKeywords={result.secondaryMatchedKeywords}
               aiReason={undefined}
               fallbackReasons={result.secondaryReasons}
+              isLowMatch={result.isLowMatch}
             />
           </div>
         </div>
